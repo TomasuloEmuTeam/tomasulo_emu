@@ -32,15 +32,17 @@
 <div class="container-fluid">
     <h1>Tomasulo Machine</h1>
     <div id="controlPanel">
+        <button class="btn btn-info btn-sm" id="btnLoad">Load</button>
         <button class="btn btn-info btn-sm" id="btnRun">Run</button>
+        <button class="btn btn-info btn-sm" id="btnStop">Stop</button>
         <button class="btn btn-info btn-sm" id="btnStep">Step</button>
         <button class="btn btn-info btn-sm" id="btnReset">Reset</button>
     </div>
     <div class="row">
-        <div class="col-lg-3">
+        <div class="col-lg-2">
 
             <h2>Instructions</h2>
-            <div id="textCurrentPC">PC: 0x12</div>
+            <div>PC: <span id="textCurrentPC">0x12</span></div>
             <textarea id="textInstructions">
 ADDD F1, F2, F3
 SUBD F1, F2, F3
@@ -97,14 +99,15 @@ ST F1, ADDR</textarea>
 </div>
 
 <script>
-    CodeMirror.fromTextArea(document.getElementById("textInstructions"), {
+    cm = CodeMirror.fromTextArea(document.getElementById("textInstructions"), {
         lineNumbers: true,
 //        mode: "text/html",
         matchBrackets: true,
         styleActiveLine: true,
         gutters: ["CodeMirror-linenumber", "breakpoints"],
 
-    }).on("gutterClick", function(cm, n) {
+    });
+    cm.on("gutterClick", function(cm, n) {
         let info = cm.lineInfo(n);
         cm.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : makeMarker());
     });

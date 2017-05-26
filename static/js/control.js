@@ -1,4 +1,13 @@
 $(document).ready(()=> {
+    let currentPC = 0;
+    let codeLines = [];
+    let timerRun = null;
+    let intRegs = [];
+    const IntRegCount = 11;
+    for (let i = 0; i < IntRegCount; ++i) {
+        intRegs[i] = {register: "R" + i.toString(), expression: "3 + " + i.toString(), value: 3 + i};
+    }
+
     (() => {
         let data = [];
         for (let i = 0; i < 10; i++) {
@@ -6,7 +15,7 @@ $(document).ready(()=> {
             for (let j = 0; j < 16; ++j) {
                 obj["0x" + j.toString(16)] = sprintf("%02x", i * 27 + j * 4 + 5);
             }
-            obj["address"] = i;
+            obj["address"] = "0x" + (i * 16).toString(16);
             data.push(obj);
         }
         let fields = [];
@@ -52,8 +61,8 @@ $(document).ready(()=> {
     })();
     (() => {
         let data = [];
-        for (let i = 0; i <= 10; i++) {
-            data.push({register: "R" + i.toString(), expression: "2 + 3", value: 5});
+        for (let i = 0; i < IntRegCount; i++) {
+            data.push(intRegs[i]);
         }
         $("#tableIntRegs").jsGrid({
             width: '400px',
@@ -168,7 +177,69 @@ $(document).ready(()=> {
 
     })();
 
-    $("#btnRun").click((e) => {
-        alert(emulator.solarSystem.greet());
+    function setPC(pc) {
+        currentPC = pc;
+        emulator.emu.setPC(currentPC);
+        $("#textCurrentPC").text("0x" + currentPC.toString(16));
+        cm.setCursor({line: currentPC, ch: 0});
+    }
+    function step() {
+        emulator.emu.step();
+        currentPC++;
+        $("#textCurrentPC").text("0x" + currentPC.toString(16));
+        cm.setCursor({line: currentPC, ch: 0});
+        syncData();
+    }
+    function run() {
+        stop();
+        syncData();
+        timerRun = setInterval(() => {
+            if (currentPC < codeLines.length) {
+                step();
+            }
+            else {
+                stop();
+            }
+        }, 200);
+    }
+    function stop() {
+        if (timerRun !== null) {
+            clearInterval(timerRun);
+        }
+    }
+    function syncIntRegisters() {
+        const tb = $("#tableIntRegs");
+        for (let i = 0; i <= 10; i++) {
+            let {expression: exp, value: val} = emulator.emu.getReg("R", i);
+
+            const name = "R" + i.toString();
+            const line = {register: name, expression: exp, value: val};
+
+            const rowJq = tb.jsGrid("rowByItem", intRegs[i]);
+            tb.jsGrid("updateItem", rowJq, line)
+        }
+        // tb.jsGrid("refresh");
+    }
+    function syncData() {
+        syncIntRegisters();
+    }
+
+    $("#btnLoad").click((e) => {
+        const lines = cm.getValue().split("\n");
+        const code = lines.map((line) => {
+            line.replace(",", "").split(" ");
+        });
+        codeLines = code;
+        emulator.emu.loadCode(code);
+        setPC(0);
     });
+    $("#btnStep").click((e) => {
+        step();
+    });
+    $("#btnRun").click((e) => {
+        run();
+    });
+    $("#btnStop").click((e) => {
+        stop();
+    })
 });
