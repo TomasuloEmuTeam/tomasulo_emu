@@ -10,9 +10,9 @@ class Station(object):
         super(Station, self).__init__()
         self.name = name
         self.size = size
-        self.entry = {"%s%d"%(self.name, x):[-1, -1, -1, True] for x in range(self.size)}
+        self.entry = {"%s%d"%(self.name, x):[-1, -1, -1, True, -1] for x in range(self.size)}
 
-    def add(self, arg1, arg2, arg3, types=True):
+    def add(self, inst_num, arg1, arg2, arg3, types=True):
         choose = None
         for item in self.entry:
             if self.entry[item][0] == -1:
@@ -38,7 +38,15 @@ class Station(object):
             self.entry[choose][2] = reg.get(arg3)
             self.entry[choose][3] = types
 
+        self.entry[choose][4] = inst_num
         # print("%s : %s add a new instruction"%(self.name, choose))
+        return True
+
+    def check(self):
+        for item in self.entry:
+            if self.entry[item][0] != -1:
+                return False
+
         return True
 
     def choose(self):
@@ -67,7 +75,11 @@ class Station(object):
                     self.entry[item][x] = value
 
     def reset(self, key):
-        self.entry[key][0] = -1
+        if key in self.entry:
+            self.entry[key][0] = -1
+
+    def getAll(self):
+        return self.entry
 
 
 # class LoadStation(Station):

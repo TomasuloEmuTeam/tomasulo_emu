@@ -55,9 +55,10 @@ def init(inst_list):
     inst_num = 0
     setInst(inst_list)
     initStation()
+    states = [[None, None, None] for x in range(len(instructions))]
 
 def getStates():
-    pass
+    return states
 
 def setAllMem(data):
     mem.setAll(data)
@@ -78,32 +79,90 @@ def getAllReg():
     return ret
 
 def getLoadQueue():
-    pass
+    load_vect = load.getAll()
+    ret = []
+    for (name, inst) in load_vect.items():
+        item = [name]
+        if inst[0] == -1:
+            item += ["N", None, None]
+        else:
+            item += (["Y"] + inst[0:2])
+
+        ret.append(item)
+
+    return ret
 
 def getStoreQueue():
-    pass
+    store_vect = store.getAll()
+    ret = []
+    for (name, inst) in store_vect.items():
+        item = [name]
+        if inst[0] == -1:
+            item += ["N", None, None, None]
+        else:
+            item.append("Y")
+            item.append(inst[1])
+            if type(inst[0]) == str:
+                item += [inst[0], None]
+            else:
+                item += [None, inst[0]]
+
+        ret.append(item)
+
+    return ret
 
 def getReservation():
-    pass
+    ret = []
+
+    adder_vect = adder.getAll()
+    mult_vect  = mult.getAll()
+    all_items  = list(adder_vect.items()) + list(mult_vect.items())
+
+    for (name, inst) in all_items:
+        item = [name]
+        if inst[0] == -1:
+            item.append("N")
+            for x in range(5):
+                item.append(None)
+        else:
+            item.append("Y")
+            # for x in range(3):
+            item.append(inst[0])
+            for i in range(1, 3):
+                if type(inst[i]) == str:
+                    item += [inst[i], None]
+                else:
+                    item += [None, inst[i]]
+
+        ret.append(item)
+
+    return ret
 
 
 def step():
     global cycle, inst_num, states
 
-    def update(reg_addr, name, value):
+    def update(arg):
+        (reg_addr, name, value) = arg
         reg.update(reg_addr, value)
         for sta in stations:
             sta.update(name, value)
 
+    def reset(name):
+        for sta in stations:
+            sta.reset(name)
+
     def execute(name, inst):
         # print("exec", name, inst)
+        cur_inst_num = inst[4]
+
         if name[:-1] == "ld":
-            update(inst[0], name, mem.get(inst[1]))
-            load.reset(name)
+            # update(inst[0], name, mem.get(inst[1]))
+            return (inst[0], name, mem.get(inst[1]))
         elif name[:-1] == "st":
             # update(inst[0], name, reg.get(inst[0]))
             mem.set(inst[1], inst[0])
-            store.reset(name)
+            return (None, name, None)
         else:
             # reg_val1 = reg.get(inst[1])
             reg_val1 = inst[1]
@@ -116,8 +175,8 @@ def step():
                 else:
                     # sub
                     value = reg_val1 - reg_val2
-                update(inst[0], name, value)
-                adder.reset(name)
+                # update(inst[0], name, value)
+                return (inst[0], name, value)
             elif name[:-1] == "mult":
                 if inst[3]:
                     # mult
@@ -129,11 +188,18 @@ def step():
                     except Exception:
                         value = float("nan")
 
-                update(inst[0], name, value)
-                mult.reset(name)
+                # update(inst[0], name, value)
+                return (inst[0], name, value)
 
     def exeDone():
-        return (inst_num == len(instructions)) and reg.checkAll()
+        if inst_num != len(instructions):
+            return False
+
+        for sta in stations:
+            if not sta.check():
+                return False
+
+        return True
 
     if inst_num < len(instructions):
         instruct = instructions[inst_num]
@@ -143,22 +209,23 @@ def step():
 
         flag = None
         if s[0] == "LD":
-            flag = load.add(int(s[1][1:]), int(s[2], 16), "load")
+            flag = load.add(inst_num, int(s[1][1:]), int(s[2], 16), "load")
         elif s[0] == "ST":
-            flag = store.add(int(s[1][1:]), int(s[2], 16), "store")
+            flag = store.add(inst_num, int(s[1][1:]), int(s[2], 16), "store")
         elif s[0] == "ADDD":
-            flag = adder.add(int(s[1][1:]), int(s[2][1:]), int(s[3][1:]))
+            flag = adder.add(inst_num, int(s[1][1:]), int(s[2][1:]), int(s[3][1:]))
         elif s[0] == "SUBD":
-            flag = adder.add(int(s[1][1:]), int(s[2][1:]), int(s[3][1:]), False)
+            flag = adder.add(inst_num, int(s[1][1:]), int(s[2][1:]), int(s[3][1:]), False)
         elif s[0] == "MULD":
-            flag = mult.add(int(s[1][1:]), int(s[2][1:]), int(s[3][1:]))
+            flag = mult.add(inst_num, int(s[1][1:]), int(s[2][1:]), int(s[3][1:]))
         elif s[0] == "DIVD":
-            flag = mult.add(int(s[1][1:]), int(s[2][1:]), int(s[3][1:]), False)
+            flag = mult.add(inst_num, int(s[1][1:]), int(s[2][1:]), int(s[3][1:]), False)
         else:
             print("wrong instruction: (%s)!!!"%instruct)
             # return False
 
         if flag:
+            states[inst_num][0] = cycle
             inst_num += 1
 
     # choose instructions to execute
@@ -182,12 +249,28 @@ def step():
                 stations[sta]["inst"] = choose[1]
         else:
             if num == 1:
+                stations[sta]["iden"] = execute(stations[sta]["name"], stations[sta]["inst"])
+
+                if sta == store:
+                    stations[sta]["num"] = -1
+                    reset(stations[sta]["iden"][1])
+                else:
+                    stations[sta]["num"] = 0
+
+                cur_inst_num = stations[sta]["inst"][4]
+                states[cur_inst_num][1] = cycle
+            elif num == 0:
                 stations[sta]["num"] = -1
-                # update all identifiers
-                execute(stations[sta]["name"], stations[sta]["inst"])
+                inst = stations[sta]["iden"]
+                update(inst)
+                reset(inst[1])
+
+                cur_inst_num = stations[sta]["inst"][4]
+                states[cur_inst_num][2] = cycle
             else:
                 stations[sta]["num"] -= 1
 
+    cycle += 1
     return exeDone()
 
 
@@ -203,6 +286,14 @@ if __name__ == '__main__':
     init(insts)
 
     while not step():
+        if cycle % 10 == 0:
+            print("load queue: ", getLoadQueue())
+            print("store queue:", getStoreQueue())
+            print("reser queue:", getReservation())
+            print("states:", getStates())
+            print()
+
         pass
+    # print("states:", getStates())
 
     print("All registers:\n", getAllReg())
