@@ -20,7 +20,7 @@ class Station(object):
                 break
 
         if choose == None:
-            print("station %s is full"%self.name)
+            # print("station %s is full"%self.name)
             return False
 
         if arg3 == "load":
@@ -38,7 +38,7 @@ class Station(object):
             self.entry[choose][2] = reg.get(arg3)
             self.entry[choose][3] = types
 
-        print("%s : %s add a new instruction"%(self.name, choose))
+        # print("%s : %s add a new instruction"%(self.name, choose))
         return True
 
     def choose(self):

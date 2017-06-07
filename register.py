@@ -3,7 +3,7 @@
 class Reg(object):
     """Register class
     the register format:
-        | True/False | content/station identifier |
+        | content/station identifier |
     """
     def __init__(self, size=11):
         super(Reg, self).__init__()
@@ -13,11 +13,11 @@ class Reg(object):
         self.arr  = [0.0 for x in range(self.size)]
         
     def identify(self, i, name):
-        print("identify register %d as %s"%(i, name))
+        # print("identify register %d as %s"%(i, name))
         self.arr[i] = name
 
     def update(self, i, con):
-        print("update register %d as %f"%(i, con))
+        # print("update register %d as %f"%(i, con))
         self.arr[i] = con
 
     def get(self, i):
@@ -27,6 +27,9 @@ class Reg(object):
         #     print("get register %d, its identifier is %f"%(i, self.arr[i][1]))
         # return self.arr[i][0], self.arr[i][1]
         return self.arr[i]
+
+    def getAll(self):
+        return self.arr[:]
 
     def print(self):
         print("All registers:")

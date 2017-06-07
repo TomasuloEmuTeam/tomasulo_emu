@@ -15,8 +15,15 @@ class Mem(object):
         # print("set mem[%d] as %f"%(i, con))
         self.arr[i] = con
 
+    def setAll(self, data):
+        for x in range(self.size):
+            self.arr[x] = data[x]
+
     def get(self, i):
-        print("get mem[%d]"%i)
+        # print("get mem[%d]"%i)
         return self.arr[i]
+
+    def getAll(self):
+        return self.arr[:]
 
 mem = Mem()
