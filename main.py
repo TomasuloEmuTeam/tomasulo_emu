@@ -11,20 +11,30 @@ mult  = Station("mult", 2)
 
 # cycle number
 cycle = 0
+
+# current instruction num
 inst_num = 0
 
+# instruction list
 instructions = []
+
+# station states
 stations = {}
+
+# operation states
 states   = []
 
 def init(inst_list):
-    # set instruction lists
+    """init all global var"""
+
     def setInst(inst_list):
+        """set instruction lists"""
         global instructions
 
         instructions = inst_list[:]
 
     def initStation():
+        """init station states"""
         global stations
 
         stations = {
@@ -58,15 +68,49 @@ def init(inst_list):
     states = [[None, None, None] for x in range(len(instructions))]
 
 def getStates():
+    """states layout:
+    [
+        [launch_num, exec_num, writeback_num],
+        ...
+    ]
+
+    eg.
+    [
+        [0, 2, 3],
+        [1, 6, 7], 
+        ...
+        [8, None, None]
+    ]
+    """
     return states
 
 def setAllMem(data):
+    """data format:
+    [val_0, val_1, ..., val_4095]
+    """
     mem.setAll(data)
 
 def getAllMem():
+    """Mem data format:
+    [val_0, val_1, ..., val_4095]
+    """
     return mem.getAll()
 
 def getAllReg():
+    """reg data format:
+    [
+        [V, Q],
+        ...
+    ]
+
+    eg.
+    [
+        [1.0, None],
+        [None, "ld2"],
+        ...
+        [0.0, None]
+    ]
+    """
     reg_vect = reg.getAll()
     # print("reg.getAll() = \n", reg_vect)
     ret = []
@@ -79,6 +123,19 @@ def getAllReg():
     return ret
 
 def getLoadQueue():
+    """load queue data format:
+    [
+        [name, busy(Y/N), reg_num, mem_addr],
+        ...
+    ]
+
+    eg.
+    [
+        ['ld0', 'N', None, None],
+        ['ld1', 'Y', 1, 2],
+        ['ld2', 'Y', 2, 5]
+    ]
+    """
     load_vect = load.getAll()
     ret = []
     for (name, inst) in load_vect.items():
@@ -93,6 +150,19 @@ def getLoadQueue():
     return ret
 
 def getStoreQueue():
+    """store queue data format:
+    [
+        [name, busy(Y/N), reg_val, reg_iden, mem_addr],
+        ...
+    ]
+
+    eg.
+    [
+        ['st0', 'Y', 'ld1', None, 9],
+        ['st1', 'Y', 'ld2', None, 8],
+        ['st2', 'N', None, None, None]
+    ]
+    """
     store_vect = store.getAll()
     ret = []
     for (name, inst) in store_vect.items():
@@ -101,17 +171,32 @@ def getStoreQueue():
             item += ["N", None, None, None]
         else:
             item.append("Y")
-            item.append(inst[1])
             if type(inst[0]) == str:
                 item += [inst[0], None]
             else:
                 item += [None, inst[0]]
+            item.append(inst[1])
 
         ret.append(item)
 
     return ret
 
 def getReservation():
+    """reservation queue data format:
+    [
+        [name, busy(Y/N), Op, Vi, Qi, Vj, Qj],
+        ...
+    ]
+
+    eg.
+    [
+        ['add0', 'Y', 2, 1.0, None, 2.0, None],
+        ['add1', 'N', None, None, None, None, None],
+        ['add2', 'N', None, None, None, None, None],
+        ['mult0', 'Y', 3, -1.0, None, 2.0, None],
+        ['mult1', 'Y', 4, None, 'mult0', -1.0, None]]
+    ]
+    """
     ret = []
 
     adder_vect = adder.getAll()
@@ -130,9 +215,9 @@ def getReservation():
             item.append(inst[0])
             for i in range(1, 3):
                 if type(inst[i]) == str:
-                    item += [inst[i], None]
-                else:
                     item += [None, inst[i]]
+                else:
+                    item += [inst[i], None]
 
         ret.append(item)
 
@@ -140,6 +225,8 @@ def getReservation():
 
 
 def step():
+    """step & return whether execute done or not"""
+    
     global cycle, inst_num, states
 
     def update(arg):
