@@ -222,7 +222,6 @@ def getReservation():
 
     return ret
 
-
 def step():
     """step & return whether execute done or not"""
 
@@ -375,18 +374,20 @@ if __name__ == '__main__':
     with open(file_path) as f:
         insts = [line.strip() for line in f.readlines()]
 
-    for x in range(4096):
-        mem.set(x, x * 1.0)
+    # for x in range(4096):
+        # mem.set(x, x * 1.0)
+    setAllMem([x * 1.0 for x in range(4096)])
 
     init(insts)
 
     while not step():
         if cycle % 10 == 0:
             print("Cycle %d"%(cycle))
-            print("load queue: ", getLoadQueue())
-            print("store queue:", getStoreQueue())
-            print("reser queue:", getReservation())
-            print("states:", getStates())
+            # print("load queue: ", getLoadQueue())
+            # print("store queue:", getStoreQueue())
+            # print("reser queue:", getReservation())
+            # print("states:", getStates())
+            print("Reg", getAllReg())
             print()
 
         pass

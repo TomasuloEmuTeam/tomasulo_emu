@@ -21,11 +21,6 @@ class Reg(object):
         self.arr[i] = con
 
     def get(self, i):
-        # if self.arr[i][0]:
-        #     print("get register %d, its content is %f"%(i, self.arr[i][1]))
-        # else:
-        #     print("get register %d, its identifier is %f"%(i, self.arr[i][1]))
-        # return self.arr[i][0], self.arr[i][1]
         return self.arr[i]
 
     def getAll(self):
@@ -36,13 +31,6 @@ class Reg(object):
         for x in range(self.size):
             print("reg F%d:"%(x), self.arr[x])
         print()
-
-    def checkAll(self):
-        for x in range(self.size):
-            if type(self.arr[x]) == str:
-                return False
-
-        return True
 
 # global register variable
 reg = Reg()
