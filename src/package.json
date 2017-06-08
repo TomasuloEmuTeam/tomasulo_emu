@@ -1,0 +1,15 @@
+{
+  "name": "tomasulo_emu",
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "codemirror": "^5.26.0",
+    "electron": "^1.6.10",
+    "jquery": "^3.2.1",
+    "jsgrid": "^1.5.3",
+    "sprintf-js": "^1.1.0",
+    "toastr": "^2.1.2"
+  },
+  "version": "0.1.0",
+  "main": "main.js",
+  "extraResources": ["dist/", "static/"]
+}

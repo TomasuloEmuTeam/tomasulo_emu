@@ -1,0 +1,3 @@
+transcrypt
+flask
+flask-cors

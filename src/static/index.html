@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Tomasulo Emulator</title>
+    <meta charset="utf-8"/>
+
+    <link rel=stylesheet href="../node_modules/codemirror/lib/codemirror.css">
+    <link rel=stylesheet href="../node_modules/jsgrid/dist/jsgrid.min.css">
+    <link rel=stylesheet href="../node_modules/jsgrid/dist/jsgrid-theme.min.css">
+    <link rel=stylesheet href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../node_modules/toastr/build/toastr.css"/>
+    <script src="emu.js"></script>
+    <script src="control.js"></script>
+</head>
+
+
+<body>
+<div class="container-fluid">
+    <h3>Tomasulo Machine</h3>
+    <div id="controlPanel">
+        <button class="btn btn-info btn-sm" id="btnLoad" disabled>Load</button>
+        <button class="btn btn-info btn-sm" id="btnRun" disabled>Run</button>
+        <button class="btn btn-info btn-sm" id="btnStop" disabled>Stop</button>
+        <button class="btn btn-info btn-sm" id="btnStep" disabled>Step</button>
+    </div>
+    <div class="row">
+        <div class="col-lg-2">
+
+            <h2>Instructions</h2>
+            <div>PC: <span id="textCurrentPC">0x12</span></div>
+            <textarea id="textInstructions">LD F1 0x10
+LD F2 0x30
+LD F1 0x77
+ST F4 0x80
+ADDD F1 F2 F3
+ADDD F5 F2 F1
+MULD F6 F3 F3
+DIVD F2 F0 F1</textarea>
+        </div>
+        <div class="col-lg-2">
+            <h2>Running Status</h2>
+            <div id="runningStatus"></div>
+        </div>
+        <div class="col-lg-2">
+            <h2>Load Queue</h2>
+            <div id="tableLoadQueue"></div>
+        </div>
+        <div class="col-lg-2">
+            <h2>Store Queue</h2>
+            <div id="tableStoreQueue"></div>
+        </div>
+        <div class="col-lg-3">
+            <h2>Float Registers</h2>
+            <div id="tableFloatRegs"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <h2>Memory Editor</h2>
+            <div id="memoryEditor"></div>
+        </div>
+        <div class="col-lg-6">
+            <h2>Reservation Stations</h2>
+            <div id="tableReservationStations"></div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
+
