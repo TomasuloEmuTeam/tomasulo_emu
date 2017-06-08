@@ -44,4 +44,5 @@ class Reg(object):
 
         return True
 
+# global register variable
 reg = Reg()

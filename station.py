@@ -5,7 +5,16 @@ from register import reg
 
 
 class Station(object):
-    """docstring for Station"""
+    """docstring for Station
+    
+    Data Member:
+        name  : ld/st/add/mult
+        size  : entry size
+        entry : item dict
+        entry format:
+            { name : [-1/destOP, sourceOP1, sourceOP2, add/sub(True/False), inst_num]}
+    """
+
     def __init__(self, name, size):
         super(Station, self).__init__()
         self.name = name
@@ -13,6 +22,8 @@ class Station(object):
         self.entry = {"%s%d"%(self.name, x):[-1, -1, -1, True, -1] for x in range(self.size)}
 
     def add(self, inst_num, arg1, arg2, arg3, types=True):
+        """add an instruction to the reservation station. if the station is full, return False"""
+
         choose = None
         for item in self.entry:
             if self.entry[item][0] == -1:
@@ -20,18 +31,19 @@ class Station(object):
                 break
 
         if choose == None:
-            # print("station %s is full"%self.name)
             return False
 
         if arg3 == "load":
+            # LD
             self.entry[choose][0] = arg1
             reg.identify(arg1, choose)
             self.entry[choose][1] = arg2
         elif arg3 == "store":
+            # ST
             self.entry[choose][0] = reg.get(arg1)
             self.entry[choose][1] = arg2
         else:
-            # addd | subd | mult | divd
+            # ADDD | SUBD | MULT | DIVD
             self.entry[choose][0] = arg1
             reg.identify(arg1, choose)
             self.entry[choose][1] = reg.get(arg2)
@@ -39,10 +51,11 @@ class Station(object):
             self.entry[choose][3] = types
 
         self.entry[choose][4] = inst_num
-        # print("%s : %s add a new instruction"%(self.name, choose))
         return True
 
-    def check(self):
+    def empty(self):
+        """check whether the station is empty or not"""
+
         for item in self.entry:
             if self.entry[item][0] != -1:
                 return False
@@ -50,58 +63,49 @@ class Station(object):
         return True
 
     def choose(self):
-        for item in self.entry:
-            if self.entry[item][0] != -1:
+        """choose an usable instruction"""
+
+        ret = (False, None)
+        min_inst_num = 0xffffffff
+        for (name, inst) in self.entry.items():
+            if inst[0] != -1:
                 flag = True
-                for addr in self.entry[item]:
+                for addr in inst:
                     if type(addr) == str:
                         flag = False
-                        # print(item, ":", self.entry[item])
                         break
 
-                if flag:
-                    # print("station %s choose %s"%(self.name, item))
-                    ret = (item, self.entry[item][:])
-                    # reset the choosed entry
-                    # self.entry[item][0] = -1
-                    return ret
+                if flag and inst[4] < min_inst_num:
+                    ret = (name, inst[:])
+                    min_inst_num = inst[4]
 
-        return False, None
+        return ret
+
+    def checkMem(self, mem_addr, inst_num):
+        """check the store/load station mem_addr and judge whether an LD/ST instruction can be executed now or not"""
+
+        for (name, inst) in self.entry.items():
+            if inst[0] != -1 and inst[1] == mem_addr and inst[4] < inst_num:
+                return False
+
+        return True
 
     def update(self, name, value):
+        """update the item identifiers"""
+
         for item in self.entry:
             for x in range(3):
                 if self.entry[item][x] == name:
                     self.entry[item][x] = value
 
     def reset(self, key):
+        """reset the choosed item"""
+
         if key in self.entry:
             self.entry[key][0] = -1
 
     def getAll(self):
         return self.entry
 
-
-# class LoadStation(Station):
-#     """docstring for LoadStation"""
-#     def __init__(self, name="ld", size=3):
-#         super(LoadStation, self).__init__(name, size)
-    
-#     def execute(self, identifier):
-#         reg_addr = self.entry[identifier][0]
-#         mem_addr = self.entry[identifier][1]
-#         reg.update(reg_addr, mem.get(mem_addr))
-#         self.entry[identifier][0] = -1
-
-
-# class StoreStation(Station):
-#     """docstring for StoreStation"""
-#     def __init__(self, name="st", size=3):
-#         super(StoreStation, self).__init__(name, size)
-    
-#     def execute(self, identifier):
-#         reg_addr = self.entry[identifier][0]
-#         mem_addr = self.entry[identifier][1]
-#         mem.set(mem_addr, reg.get(reg_addr))
-#         self.entry[identifier][0] = -1
-        
+    def print(self):
+        print(self.name, self.entry)

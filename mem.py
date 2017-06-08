@@ -12,7 +12,6 @@ class Mem(object):
         self.arr  = [0.0 for x in range(size)]
         
     def set(self, i, con):
-        # print("set mem[%d] as %f"%(i, con))
         self.arr[i] = con
 
     def setAll(self, data):
@@ -20,10 +19,10 @@ class Mem(object):
             self.arr[x] = data[x]
 
     def get(self, i):
-        # print("get mem[%d]"%i)
         return self.arr[i]
 
     def getAll(self):
         return self.arr[:]
 
+# global memory variable
 mem = Mem()

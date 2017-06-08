@@ -1,5 +1,5 @@
-from mem import mem
-from register import reg
+from mem import Mem
+from register import Reg
 from station import *
 
 from queue import Queue
@@ -211,7 +211,6 @@ def getReservation():
                 item.append(None)
         else:
             item.append("Y")
-            # for x in range(3):
             item.append(inst[0])
             for i in range(1, 3):
                 if type(inst[i]) == str:
@@ -226,7 +225,7 @@ def getReservation():
 
 def step():
     """step & return whether execute done or not"""
-    
+
     global cycle, inst_num, states
 
     def update(arg):
@@ -283,7 +282,7 @@ def step():
             return False
 
         for sta in stations:
-            if not sta.check():
+            if not sta.empty():
                 return False
 
         return True
@@ -320,7 +319,16 @@ def step():
         num = stations[sta]["num"]
         if num == -1:
             choose = sta.choose()
+
             if choose[0] != False:
+                if sta == load or sta == store:
+                    mem_addr = choose[1][1]
+                    cur_inst_num = choose[1][4]
+                    if load.checkMem(mem_addr, cur_inst_num) and store.checkMem(mem_addr, cur_inst_num):
+                        pass
+                    else:
+                        continue
+
                 # print("choose", choose)
                 if sta == mult:
                     if choose[1][3] == True:
@@ -374,6 +382,7 @@ if __name__ == '__main__':
 
     while not step():
         if cycle % 10 == 0:
+            print("Cycle %d"%(cycle))
             print("load queue: ", getLoadQueue())
             print("store queue:", getStoreQueue())
             print("reser queue:", getReservation())
@@ -381,6 +390,6 @@ if __name__ == '__main__':
             print()
 
         pass
-    # print("states:", getStates())
 
-    print("All registers:\n", getAllReg())
+    print("\nStates:", getStates())
+    print("\nAll registers:\n", getAllReg())
